@@ -2,47 +2,54 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 
 namespace APIPractice4
 {
     public class DataObject
     {
+        public string Index { get; set; }
         public string Name { get; set; }
+        public string[] Description { get; set; }
     }
 
     class Program
     {
-        //Global:
-        private const string URL = "https://www.dnd5eapi.co/api/";
-        private string urlParameters;
+        static HttpClient client = new HttpClient();
+
         static void Main(string[] args)
         {
-            MakeRequest("spells/acid-arrow/");
+            RunAsync().GetAwaiter().GetResult();
         }
 
-        static void MakeRequest(string urlParams)
+        static async Task RunAsync()
         {
-
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri(URL);
-
+            client.BaseAddress = new Uri("https://www.dnd5eapi.co/api/");
+            client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            HttpResponseMessage response = client.GetAsync(urlParams).Result;
+            try
+            {
+                var data = await GetDataAsync("spells/acid-arrow/");
+                Console.WriteLine(data.Index);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        static async Task<DataObject> GetDataAsync(string path)
+        {
+            DataObject data = null;
+            HttpResponseMessage response = await client.GetAsync(path);
             if (response.IsSuccessStatusCode)
             {
-                //FAIL: cannot deserialize JSON as IEnumerable
-                var dataObjects = response.Content.ReadAsAsync<IEnumerable<DataObject>>().Result;
-                foreach(var d in dataObjects)
-                {
-                    Console.WriteLine("{0}", d.Name);
-                }
+                data = await response.Content.ReadAsAsync<DataObject>();
             }
-            else
-            {
-                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
-            }
+
+            return data;
         }
     }
 }
