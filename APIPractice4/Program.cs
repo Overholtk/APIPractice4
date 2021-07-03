@@ -11,7 +11,7 @@ namespace APIPractice4
     {
         public string Index { get; set; }
         public string Name { get; set; }
-        public string[] Description { get; set; }
+        public List<string> Desc { get; set; }
     }
 
     class Program
@@ -32,7 +32,11 @@ namespace APIPractice4
             try
             {
                 var data = await GetDataAsync("spells/acid-arrow/");
-                Console.WriteLine(data.Index);
+                Console.Write($"{data.Index}, {data.Name}, ");
+                foreach(string d in data.Desc)
+                {
+                    Console.Write($"{d} ");
+                }
             }
             catch(Exception e)
             {
